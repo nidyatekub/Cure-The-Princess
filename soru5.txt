@@ -1,0 +1,101 @@
+SORU 5.1
+     import torch
+import torch.nn as nn
+import torch.optim as optim
+
+class MLP(nn.Module):
+    def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
+        super(MLP, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size1)
+        self.fc2 = nn.Linear(hidden_size1, hidden_size2)
+        self.fc3 = nn.Linear(hidden_size2, output_size)
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.sigmoid(self.fc3(x))
+        return x
+
+SORU 5.2
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+# Rastgele sayı üretebilirlik için seed ayarı
+SEED = 210401007
+torch.manual_seed(SEED)
+
+# MLP model sınıfı
+class MLP(nn.Module):
+    def __init__(self, input_size, hidden_size1, hidden_size2, output_size):
+        super(MLP, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size1)
+        self.fc2 = nn.Linear(hidden_size1, hidden_size2)
+        self.fc3 = nn.Linear(hidden_size2, output_size)
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.sigmoid(self.fc3(x))
+        return x
+
+# Veriler ve batch boyutu
+train_inputs = ...
+train_targets = ...
+val_inputs = ...
+val_targets = ...
+batch_size = 16
+
+# Model, loss fonksiyonu ve optimizer
+input_size = train_inputs.shape[1]
+output_size = 1 # Çıkış katmanındaki nöron sayısı, veri setine göre belirlenir
+hidden_size1 = 100
+hidden_size2 = 50
+model = MLP(input_size, hidden_size1, hidden_size2, output_size)
+criterion = nn.BCELoss() # Binary Cross Entropy loss
+optimizer = optim.SGD(model.parameters(), lr=0.001) # Learning rate: 0.001
+
+# Epoch sayısı ve learning rate için deneme yapılabilir
+epochs = 100
+learning_rate = 0.001
+
+# Eğitim döngüsü
+for epoch in range(epochs):
+    # Mini-batch verileri
+    for i in range(0, len(train_inputs), batch_size):
+        batch_inputs = train_inputs[i:i+batch_size]
+        batch_targets = train_targets[i:i+batch_size]
+
+        # Gradyanları sıfırla
+        optimizer.zero_grad()
+
+        # İleri yönlü hesaplamalar
+        outputs = model(batch_inputs)
+        loss = criterion(outputs, batch_targets)
+
+        # Geriye yayılım ve optimize etme
+        loss.backward()
+        optimizer.step()
+
+    # Epoch sonuçlarını yazdır
+    print(f'Epoch {epoch+1}, Loss: {loss.item():.4f}')
+
+    # Validasyon döngüsü
+    val_loss = 0.0
+    with torch.no_grad():
+        for i in range(0, len(val_inputs), batch_size):
+            batch_inputs = val_inputs[i:i+batch_size]
+            batch_targets = val_targets[i:i+batch_size]
+
+            outputs = model(batch_inputs)
+            loss = criterion(outputs, batch_targets)
+
+            val_loss += loss.item()
+
+    # Validasyon sonuçlarını yazdır
+    print(f'Epoch {epoch+1}, Validation Loss: {val_loss/len(val_inputs):.4f}')
+
